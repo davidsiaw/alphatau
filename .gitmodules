@@ -1,0 +1,3 @@
+[submodule "ext/alphatau/native/sdl"]
+	path = ext/alphatau/native/sdl
+	url = https://github.com/davidsiaw/sdl2
