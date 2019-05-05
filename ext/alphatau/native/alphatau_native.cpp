@@ -46,9 +46,9 @@ public:
     SDL_Init(SDL_INIT_EVERYTHING);
   }
 
-  int haha(int a)
+  int version()
   {
-    return a + 5;
+    return SDL_COMPILEDVERSION;
   }
 
   ~NativeInfo()
@@ -56,36 +56,63 @@ public:
     SDL_Quit();
   }
 
-  static VALUE rb_haha(VALUE self, VALUE a)
+  static VALUE rb_version(VALUE self)
   {
     Info<NativeInfo>* ptr;
 
     Data_Get_Struct(self, Info<NativeInfo>, ptr);
-    return INT2NUM( ptr->info->haha(NUM2INT(a)) );
+    return INT2NUM( ptr->info->version() );
   }
 };
 
 class WindowInfo
 {
-  SDL_Window* window;
-  SDL_Renderer* renderer;
+  bool running;
 public:
-  WindowInfo()
+  WindowInfo() : running(false)
   {
+  }
+
+  ~WindowInfo()
+  {
+  }
+
+  void start()
+  {
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+
     SDL_CreateWindowAndRenderer(800,
                                 600,
                                 SDL_WINDOW_RESIZABLE,
                                 &window,
                                 &renderer);
-  }
 
-  ~WindowInfo()
-  {
-    SDL_DestroyWindow(window);
+    running = true;
+    SDL_Event event;
+    while (running) {
+      SDL_PollEvent(&event);
+      if (event.type == SDL_QUIT) {
+        running = false;
+        break;
+      }
+      SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00);
+      SDL_RenderClear(renderer);
+      SDL_RenderPresent(renderer);
+    }
+
     SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
   }
 
+  static VALUE rb_start(VALUE self)
+  {
+    Info<WindowInfo>* ptr;
 
+    Data_Get_Struct(self, Info<WindowInfo>, ptr);
+    ptr->info->start();
+    return self;
+  }
 };
 
 template<typename TClass>
@@ -107,8 +134,8 @@ void Init_native(void)
   cWindow = rb_define_class_under(cNative, "Window", rb_cObject);
 
   bind_class<NativeInfo>(cNative);
-  rb_define_method(cNative, "haha", (RubyMethod)&NativeInfo::rb_haha, 1);
+  rb_define_method(cNative, "version", (RubyMethod)&NativeInfo::rb_version, 0);
 
   bind_class<WindowInfo>(cWindow);
-
+  rb_define_method(cWindow, "start", (RubyMethod)&WindowInfo::rb_start, 0);
 }

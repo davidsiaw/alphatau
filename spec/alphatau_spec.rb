@@ -8,8 +8,7 @@ RSpec.describe Alphatau do
     b = Alphatau::Native::Window.new
   end
 
-  it 'returns 6' do
-    a = Alphatau::Native.instance
-    expect(a.haha 1).to eq 6
+  it 'is the correct version' do
+    expect(Alphatau::Native.instance.version).to eq 2008
   end
 end
